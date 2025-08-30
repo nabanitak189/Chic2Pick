@@ -1,0 +1,212 @@
+import io
+import os
+from datetime import datetime
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
+import pandas as pd
+import plotly.express as px
+
+import streamlit as st
+
+from utils.analyzers import aggregate_scores
+from utils.ui import score_chip, verdict, section_header
+# -------------------------
+# Page config
+# -------------------------
+st.set_page_config(
+    page_title="Outfit Vibe Rater",
+    page_icon="👗",
+    layout="wide"
+)
+
+# -------------------------
+# Load custom CSS
+# -------------------------
+if os.path.exists("styles.css"):
+    with open("styles.css", "r") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# -------------------------
+# Header
+# -------------------------
+col_logo, col_title = st.columns([1, 5], vertical_alignment="center")
+with col_logo:
+    st.image("assets/logo.svg", width=72)
+with col_title:
+    st.title("✨ Outfit Vibe Rater")
+    st.caption(
+        "Upload an outfit photo to get instant vibe scores — "
+        "complexity, pattern density, fit tightness, and more."
+    )
+
+# -------------------------
+# Sidebar (upload & options)
+# -------------------------
+# --- Sidebar ---
+with st.sidebar:
+    st.header("Upload")
+    img_choice = st.radio("Input method", ["Upload", "Camera"], horizontal=True)
+
+    st.divider()
+    st.header("Options")
+    show_debug = st.checkbox("Show analysis maps (edges/entropy/mask)")
+
+# --- Main Area: Image Input ---
+if img_choice == "Upload":
+    img_file = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png", "webp"])
+else:
+    st.markdown("### 📸 Take a Photo")
+    img_file = st.camera_input("Capture outfit photo", key="camera")
+
+# -------------------------
+# If no image yet
+# -------------------------
+if img_file is None:
+    st.info("⬅️ Upload an outfit photo to get started.")
+    st.stop()
+
+# -------------------------
+# Process image
+# -------------------------
+image = Image.open(img_file).convert("RGB")
+img_np = np.array(image)
+scores = aggregate_scores(img_np)
+
+# -------------------------
+# Helper: Human-readable interpretation
+# -------------------------
+def interpret_scores(scores: dict) -> list[str]:
+    lines = []
+    if scores["vibe_maximalism"] < 30:
+        lines.append("Outfit looks **minimalist** and clean.")
+    elif scores["vibe_maximalism"] > 70:
+        lines.append("Outfit has a **maximalist vibe** — bold and expressive.")
+    else:
+        lines.append("Outfit balances minimal and maximal elements.")
+
+    if scores["pattern_density"] < 30:
+        lines.append("Patterns are **sparse or subtle**.")
+    elif scores["pattern_density"] > 70:
+        lines.append("Patterns are **very dense and eye-catching**.")
+    else:
+        lines.append("Moderate level of pattern usage.")
+
+    if scores["fit_tightness"] > 70:
+        lines.append("Fit appears **tight/form-fitting**.")
+    elif scores["fit_tightness"] < 30:
+        lines.append("Fit appears **loose/relaxed**.")
+    else:
+        lines.append("Fit is **balanced** (not too tight, not too loose).")
+
+    if scores["colorfulness"] > 60:
+        lines.append("Colors are **bright and lively**.")
+    elif scores["colorfulness"] < 20:
+        lines.append("Outfit is **muted/monochrome**.")
+    else:
+        lines.append("Color palette is **moderately vibrant**.")
+
+    return lines
+
+# -------------------------
+# Layout: Left = Original + Scores, Right = Interpretation
+# -------------------------
+left, right = st.columns([1, 1])
+
+with left:
+    section_header("Original")
+    st.image(image, use_container_width=True)
+
+    section_header("Key Scores")
+    st.progress(int(scores["vibe_maximalism"]), text=f"🎨 Maximalist Vibe: {scores['vibe_maximalism']:.1f}")
+    st.progress(int(scores["pattern_density"]), text=f"🌀 Pattern Density: {scores['pattern_density']:.1f}")
+    st.progress(int(scores["fit_tightness"]), text=f"📏 Fit Tightness (higher=tighter): {scores['fit_tightness']:.1f}")
+    st.progress(int(scores["colorfulness"]), text=f"🌈 Colorfulness: {scores['colorfulness']:.1f}")
+    st.progress(int(scores["complexity"]), text=f"⚡ Visual Complexity: {scores['complexity']:.1f}")
+    st.progress(int(scores["boldness"]), text=f"🔥 Boldness: {scores['boldness']:.1f}")
+
+with right:
+    section_header("Interpretation")
+    for line in interpret_scores(scores):
+        st.markdown(f"- {line}")
+
+    st.caption("Note: Fit tightness uses a silhouette heuristic (person segmentation if available).")
+
+    section_header("Details")
+    score_chip("Colorfulness", scores["colorfulness"])
+    score_chip("Complexity", scores["complexity"])
+    score_chip("Boldness", scores["boldness"])
+
+    st.divider()
+    # Report export
+    if st.button("📄 Generate Shareable Report"):
+        # Create a simple PNG report
+        W, H = 1080, 1350
+        report = Image.new("RGB", (W, H), (250, 250, 252))
+        draw = ImageDraw.Draw(report)
+
+        # Fonts (fallback to default if system fonts not found)
+        try:
+            from matplotlib import font_manager
+            font_paths = font_manager.findSystemFonts(fontpaths=None, fontext="ttf")
+            font_path = font_paths[0] if font_paths else None
+            title_font = ImageFont.truetype(font_path, 56) if font_path else ImageFont.load_default()
+            h2_font = ImageFont.truetype(font_path, 36) if font_path else ImageFont.load_default()
+            txt_font = ImageFont.truetype(font_path, 28) if font_path else ImageFont.load_default()
+        except Exception:
+            title_font = h2_font = txt_font = ImageFont.load_default()
+
+        draw.text((48, 36), "Outfit Vibe Rater", fill=(20, 20, 20), font=title_font)
+        draw.text((48, 112), datetime.now().strftime("%Y-%m-%d %H:%M"), fill=(80, 80, 80), font=txt_font)
+
+        # Paste image
+        img_w = W - 96
+        ratio = img_w / image.width
+        img_h = int(image.height * ratio)
+        img_resized = image.resize((img_w, img_h))
+        report.paste(img_resized, (48, 160))
+
+        y = 160 + img_h + 24
+        lines = [
+            f"Maximalist Vibe: {scores['vibe_maximalism']:.1f}/100",
+            f"Pattern Density: {scores['pattern_density']:.1f}/100",
+            f"Fit Tightness (higher=tighter): {scores['fit_tightness']:.1f}/100",
+            f"Colorfulness: {scores['colorfulness']:.1f}/100",
+            f"Visual Complexity: {scores['complexity']:.1f}/100",
+            f"Boldness: {scores['boldness']:.1f}/100",
+        ]
+        for line in lines:
+            draw.text((48, y), line, fill=(40, 40, 40), font=h2_font)
+            y += 52
+
+        bio = io.BytesIO()
+        report.save(bio, format="PNG")
+        st.download_button(
+            "⬇️ Download Report (PNG)",
+            bio.getvalue(),
+            file_name="outfit_vibe_report.png",
+            mime="image/png"
+        )
+
+# -------------------------
+# Debug maps (optional)
+# -------------------------
+if show_debug:
+    dbg = scores.get("debug", {})
+    st.divider()
+    st.subheader("Debug Views")
+    edg = dbg.get("edges")
+    ent = dbg.get("entropy")
+    mask = dbg.get("mask")
+
+    if edg is not None:
+        st.image(edg, caption="Edges", use_container_width=True)
+    if ent is not None:
+        ent_disp = (255 * (ent - ent.min()) / (ent.ptp() + 1e-6)).astype(np.uint8)
+        st.image(ent_disp, caption="Entropy (texture)", use_container_width=True)
+    if mask is not None:
+        st.image(mask, caption="Person Mask (MediaPipe)", use_container_width=True)
+
+# -------------------------
+# Footer
+# -------------------------
+st.caption("Prototype 🔬 — heuristic-based analysis (no training needed). Ready for hackathon demos.")

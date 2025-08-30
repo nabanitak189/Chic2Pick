@@ -1,0 +1,7 @@
+streamlit>=1.36
+opencv-python-headless>=4.9.0
+numpy>=1.26
+Pillow>=10.3
+scikit-image>=0.22.0
+scikit-learn>=1.4.2
+mediapipe>=0.10.14

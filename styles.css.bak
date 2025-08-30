@@ -1,0 +1,23 @@
+/* Simple style overrides for a cleaner, card-like UI */
+.block-container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+.css-1v0mbdj, .stProgress > div > div {
+  border-radius: 999px !important;
+}
+.result-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+}
+.badge-good { background: rgba(0, 200, 0, 0.1); border: 1px solid rgba(0, 200, 0, 0.35); }
+.badge-warn { background: rgba(255, 165, 0, 0.12); border: 1px solid rgba(255, 165, 0, 0.35); }
+.badge-high { background: rgba(200, 0, 0, 0.1); border: 1px solid rgba(200, 0, 0, 0.35); }
+.score-chip {
+  border-radius: 12px;
+  padding: 0.35rem 0.6rem;
+  font-weight: 600;
+  border: 1px solid rgba(127,127,127,.25);
+}

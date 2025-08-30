@@ -1,0 +1,115 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root{
+  --bg1: #0f172a; /* deep navy */
+  --bg2: #1e293b; /* secondary dark */
+  --card: #1f2937; /* card background */
+  --accent1: linear-gradient(135deg,#6a11cb 0%,#2575fc 100%);
+  --muted: #94a3b8; /* gray text */
+  --glass: rgba(255,255,255,0.08);
+  --text: #f1f5f9;
+}
+
+.block-container {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg1);
+  color: var(--text);
+}
+
+/* Sidebar */
+[data-testid="stSidebar"] {
+  background: var(--bg2);
+  border-right: 1px solid rgba(255,255,255,0.05);
+  padding: 1rem 1rem 2rem 1rem;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  color: var(--text);
+}
+
+/* App title area */
+.app-header {
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  background: var(--bg2);
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+
+/* Card-like panels */
+.stCard, .widget {
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.35);
+  padding: 18px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+/* Interpretation final text */
+.interp {
+  background: linear-gradient(90deg, rgba(110,85,255,0.2), rgba(37,99,235,0.2));
+  border-left: 4px solid rgba(99,102,241,0.9);
+  padding: 12px;
+  border-radius: 10px;
+  font-weight:600;
+  color: var(--text);
+}
+
+/* Score chips */
+.score-chip {
+  border-radius: 12px;
+  padding: 0.35rem 0.6rem;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--glass);
+  display:inline-block;
+  margin-right:8px;
+  color: var(--text);
+}
+
+/* Badges */
+.result-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  display: inline-block;
+  margin-right:6px;
+}
+.badge-good { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16,185,129,0.35); color:#10b981; }
+.badge-warn { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245,158,11,0.35); color:#f59e0b; }
+.badge-high { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239,68,68,0.35); color:#ef4444; }
+
+/* Primary buttons */
+.stButton > button {
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-weight: 600;
+  background: var(--accent1);
+  color: #fff;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  border: none;
+}
+.stButton > button:hover { transform: translateY(-3px); transition: all .18s ease; }
+
+/* Image card */
+.outfit-img {
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+/* Small responsive tweak */
+@media (max-width: 900px) {
+  .block-container { padding-left: 1rem; padding-right: 1rem; }
+}
+
+/* Make camera input larger & centered */
+[data-testid="stCameraInput"] {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem auto;
+  max-width: 600px;
+}
